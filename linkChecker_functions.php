@@ -934,7 +934,7 @@ function linkChecker_sendNotificationEmail(array $results): void
 
 	if ($hasProblems) {
 		$body .= "Action Required: Log into the CMS to view and fix broken links.\n";
-		$adminUrl = \settings('adminUrl') ?? '/webadmin/';
+		$adminUrl = \settings('adminUrl') ?? '/cmsb/';
 		$body .= "Dashboard: https://{$domain}{$adminUrl}?_pluginAction=linkChecker_adminDashboard\n";
 	}
 
@@ -961,7 +961,7 @@ function linkChecker_getAdminEmail(): string
  */
 function linkChecker_getEditLinkForRecord(string $tableName, int $recordNum): string
 {
-	$adminUrl = \settings('adminUrl') ?? '/webadmin/';
+	$adminUrl = \settings('adminUrl') ?? '/cmsb/';
 	return "{$adminUrl}?menu={$tableName}&action=edit&num={$recordNum}";
 }
 

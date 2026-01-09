@@ -58,7 +58,7 @@ FOR PROGRAMMERS
 -   Cron jobs registered via addCronJob():
     -   "Link Checker - Scheduled Scan" (0 0 \* \* \*)
     -   "Link Checker - Cleanup Old Results" (0 1 \* \* \*)
--   Requires server cron configured to run /webadmin/cron.php
+-   Requires server cron configured to run /cmsb/cron.php
 
 UI/ACCESSIBILITY
 

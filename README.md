@@ -1,7 +1,5 @@
 # Link Checker Plugin for CMS Builder
 
-> **Note:** This plugin only works with <a href="https://interactivetools.com/download/" target="_blank">CMS Builder</a>, available for download at https://interactivetools.com/download/
-
 Automatically scan database content fields for broken links, missing images, and malformed contact links. Helps webmasters identify and fix link issues before they impact SEO or user experience.
 
 ## Features
@@ -25,27 +23,26 @@ Automatically scan database content fields for broken links, missing images, and
 
 ## Installation
 
-1. Copy the `linkChecker` folder to your plugins directory:
+1.  Copy the `linkChecker` folder to your plugins directory:
 
-    - `/webadmin/plugins/linkChecker/` (for this site)
-    - `/cmsb/plugins/linkChecker/` (standard CMSB installation)
+        - `/cmsb/plugins/linkChecker/` (standard CMSB installation)
 
-2. Ensure PHP files have proper permissions (readable by web server):
+2.  Ensure PHP files have proper permissions (readable by web server):
 
-    ```bash
-    chmod 644 /path/to/plugins/linkChecker/*.php
-    ```
+        ```bash
+        chmod 644 /path/to/plugins/linkChecker/*.php
+        ```
 
-3. Log into the CMS admin area
+3.  Log into the CMS admin area
 
-4. The plugin will automatically:
+4.  The plugin will automatically:
 
-    - Create the database tables for results and scan history
-    - Initialize default settings
+        - Create the database tables for results and scan history
+        - Initialize default settings
 
-5. Verify installation by visiting **Plugins > Link Checker > Dashboard**
+5.  Verify installation by visiting **Plugins > Link Checker > Dashboard**
 
-6. Go to **Plugins > Link Checker > Settings** to configure scan options
+6.  Go to **Plugins > Link Checker > Settings** to configure scan options
 
 ## Configuration
 
@@ -53,35 +50,35 @@ All settings are configured through the admin interface at **Plugins > Link Chec
 
 ### Settings Reference
 
-| Setting                 | Description                                    | Default                   |
-| ----------------------- | ---------------------------------------------- | ------------------------- |
-| Enabled Tables          | Tables to scan (empty = all with text fields) | [] (all)                  |
-| Check Internal Links    | Scan internal page links                       | Enabled                   |
-| Check External Links    | Scan external URLs                             | Enabled                   |
-| Check Images            | Scan image src attributes                      | Enabled                   |
-| Check Email Links       | Validate mailto: format                        | Enabled                   |
-| Check Phone Links       | Validate tel: format                           | Enabled                   |
-| Scheduled Scan          | Enable automatic scanning                      | Enabled                   |
-| Scan Frequency          | How often to scan (daily/weekly/monthly)       | Daily                     |
-| Email Notifications     | Send email reports                             | Enabled                   |
-| Email Only On Problems  | Only email when issues found                   | Enabled                   |
-| Notification Email      | Email address (falls back to admin email)      | (admin email)             |
-| Request Timeout         | HTTP timeout in seconds                        | 10                        |
-| User Agent              | User agent for requests                        | CMSB-LinkChecker/1.0      |
-| Ignored URLs            | URLs/domains to skip with reasons              | []                        |
-| Log Retention Days      | Days to keep scan results                      | 90                        |
+| Setting                | Description                                   | Default              |
+| ---------------------- | --------------------------------------------- | -------------------- |
+| Enabled Tables         | Tables to scan (empty = all with text fields) | [] (all)             |
+| Check Internal Links   | Scan internal page links                      | Enabled              |
+| Check External Links   | Scan external URLs                            | Enabled              |
+| Check Images           | Scan image src attributes                     | Enabled              |
+| Check Email Links      | Validate mailto: format                       | Enabled              |
+| Check Phone Links      | Validate tel: format                          | Enabled              |
+| Scheduled Scan         | Enable automatic scanning                     | Enabled              |
+| Scan Frequency         | How often to scan (daily/weekly/monthly)      | Daily                |
+| Email Notifications    | Send email reports                            | Enabled              |
+| Email Only On Problems | Only email when issues found                  | Enabled              |
+| Notification Email     | Email address (falls back to admin email)     | (admin email)        |
+| Request Timeout        | HTTP timeout in seconds                       | 10                   |
+| User Agent             | User agent for requests                       | CMSB-LinkChecker/1.0 |
+| Ignored URLs           | URLs/domains to skip with reasons             | []                   |
+| Log Retention Days     | Days to keep scan results                     | 90                   |
 
 ### Link Status Types
 
 The plugin reports four types of issues:
 
-| Status    | Description                                | Action Required |
-| --------- | ------------------------------------------ | --------------- |
-| `broken`  | 404, 500, connection failed                | Fix immediately |
-| `warning` | 301/302 redirects                          | Consider update |
-| `invalid` | Malformed mailto: or tel: format           | Fix immediately |
-| `timeout` | Request timed out                          | Investigate     |
-| `ok`      | Link is working (not stored in results)    | None            |
+| Status    | Description                             | Action Required |
+| --------- | --------------------------------------- | --------------- |
+| `broken`  | 404, 500, connection failed             | Fix immediately |
+| `warning` | 301/302 redirects                       | Consider update |
+| `invalid` | Malformed mailto: or tel: format        | Fix immediately |
+| `timeout` | Request timed out                       | Investigate     |
+| `ok`      | Link is working (not stored in results) | None            |
 
 ### Ignore List
 
@@ -90,6 +87,7 @@ The plugin maintains a smart ignore list with two formats:
 #### Default Ignore List (Pre-configured)
 
 The plugin comes with 9 domains that commonly block automated checkers:
+
 -   **linkedin.com** - Blocks automated requests
 -   **facebook.com** - Blocks automated requests
 -   **instagram.com** - Blocks automated requests
@@ -106,14 +104,11 @@ These defaults prevent false positives on social media and other bot-blocking si
 
 -   **Auto-Ignore**: Domains returning 403, 406, 429, or 999 are automatically added during scans
 -   **Manual Ignore**: Add specific URLs via Settings page or by marking individual links as ignored
--   **Pattern Types**:
-    -   `domain` - Match entire domain (e.g., "facebook.com")
-    -   `path` - Match URL path (e.g., "/old-page/")
--   **Dual Format Support**:
-    -   Array format (with metadata): `{"pattern": "linkedin.com", "type": "domain", "reason": "...", "addedBy": "auto"}`
-    -   String format (manual URLs): Simple URL strings for manually ignored links
+-   **Pattern Types**: - `domain` - Match entire domain (e.g., "facebook.com") - `path` - Match URL path (e.g., "/old-page/")
+-   **Dual Format Support**: - Array format (with metadata): `{"pattern": "linkedin.com", "type": "domain", "reason": "...", "addedBy": "auto"}` - String format (manual URLs): Simple URL strings for manually ignored links
 
 #### Example ignore list structure:
+
 ```json
 {
 	"ignoredUrls": [
@@ -140,11 +135,13 @@ These defaults prevent false positives on social media and other bot-blocking si
 ### Dashboard
 
 View scan statistics, last scan date, and recent broken links. Quick access to:
+
 -   Run Full Scan Now
 -   View All Results
 -   Configure Settings
 
 **Recent Issues Table** includes action buttons for each link:
+
 -   **Edit** (blue button): Opens record in new tab for editing the content
 -   **Recheck** (default button): Re-validates the specific link immediately
 -   **Ignore** (warning button): Marks link as ignored and adds to ignore list
@@ -152,6 +149,7 @@ View scan statistics, last scan date, and recent broken links. Quick access to:
 ### Run Scan
 
 Manually execute scans:
+
 -   **Full Scan**: Check all enabled tables
 -   **Quick Scan**: Check only tables modified recently
 -   **Selected Tables**: Choose specific tables to scan
@@ -159,12 +157,10 @@ Manually execute scans:
 ### Scan Results
 
 View and manage all detected issues:
+
 -   Filter by: status, link type, table, date range
 -   Sort by any column
--   **Bulk Actions**: Select multiple links and apply actions:
-    -   Mark as Fixed
-    -   Mark as Ignored
-    -   Recheck Selected
+-   **Bulk Actions**: Select multiple links and apply actions: - Mark as Fixed - Mark as Ignored - Recheck Selected
 -   **Individual Actions**: Each link has Edit, Recheck, and Ignore buttons
 -   Direct "Edit Record" links open in new tabs
 -   Export to CSV (planned)
@@ -174,6 +170,7 @@ View and manage all detected issues:
 ### Advanced Actions Menu
 
 Available on all pages (Dashboard, Results, Settings, Run Scan, Scan History, Ignored URLs):
+
 -   **Quick Scan**: Run immediate scan without navigating to Run Scan page
 -   **Clear Old Scans**: Remove old scan history based on retention settings
 -   **Clear All Results**: Complete reset - removes all results and scan history (requires confirmation)
@@ -181,6 +178,7 @@ Available on all pages (Dashboard, Results, Settings, Run Scan, Scan History, Ig
 ### Settings
 
 Configure all plugin options including:
+
 -   What to check (internal/external/images/emails/phones)
 -   When to check (schedule and frequency)
 -   Who to notify (email settings)
@@ -190,6 +188,7 @@ Configure all plugin options including:
 ### Scan History
 
 View complete audit trail of all scans with:
+
 -   Date and time
 -   Scan type (manual or scheduled)
 -   Summary statistics
@@ -200,6 +199,7 @@ View complete audit trail of all scans with:
 ### Automatic Table Filtering
 
 The plugin automatically excludes these tables from scanning:
+
 -   **System tables**: All tables starting with `_`
 -   **Common utility tables**: `accounts`, `uploads`, `convert_to_webp`, `indexnow`, `indexnow_log`, `linkchecker_results`, `linkchecker_scans`
 -   **Menu groups**: Any table with `_menugroup` or `menugroup` in the name, or with `menuType = 'menugroup'`
@@ -209,11 +209,13 @@ This ensures only content tables with actual links are scanned, improving perfor
 ### Link Extraction
 
 The plugin scans these field types:
+
 -   `wysiwyg` - Full HTML content
 -   `textbox` - Plain text that may contain URLs
 -   `textfield` - Single line text
 
 It extracts:
+
 -   HTML links: `<a href="...">`
 -   Images: `<img src="...">`
 -   Background images: `style="background-image: url(...)"`
@@ -223,24 +225,29 @@ It extracts:
 ### Link Validation
 
 **Internal Links:**
+
 1. Check against ignore list
 2. Check if file exists (for static files)
 3. Make HTTP request for dynamic pages
 
 **External Links:**
+
 1. Check against ignore list (both manual URLs and domain patterns)
 2. Make HTTP HEAD request (fallback to GET on 405 errors)
 3. Auto-ignore if domain blocks bots (403, 406, 429, 999)
 
 **Email Validation:**
+
 -   Extract email from `mailto:` URL
 -   Validate format using PHP `filter_var()`
 
 **Phone Validation:**
+
 -   Extract digits from `tel:` URL
 -   Validate minimum 10 digits or international format
 
 **Recheck Intelligence:**
+
 -   Before rechecking, verifies link still exists in source content
 -   If link removed/replaced, automatically marks as fixed
 -   Preserves ignored status - ignored links are skipped during recheck
@@ -250,28 +257,30 @@ It extracts:
 
 The plugin registers two cron jobs with CMSB's cron system:
 
-1. **Link Checker - Scheduled Scan** (runs daily at midnight)
-   - Checks if a scan is due based on your frequency setting (daily/weekly/monthly)
-   - Only scans if enough time has passed since last scan
-   - Sends email notification after completion
+1.  **Link Checker - Scheduled Scan** (runs daily at midnight)
 
-2. **Link Checker - Cleanup Old Results** (runs daily at 1 AM)
-   - Removes old scan results based on retention setting
-   - Keeps database clean and performant
+        - Checks if a scan is due based on your frequency setting (daily/weekly/monthly)
+        - Only scans if enough time has passed since last scan
+        - Sends email notification after completion
+
+2.  **Link Checker - Cleanup Old Results** (runs daily at 1 AM) - Removes old scan results based on retention setting - Keeps database clean and performant
 
 **Important:** CMSB's cron system requires a server cron job to be set up:
+
 ```bash
-* * * * * /usr/local/bin/php /path/to/webadmin/cron.php yourdomain.com
+* * * * * /usr/local/bin/php /path/to/cmsb/cron.php yourdomain.com
 ```
 
 To verify cron is working:
-- Visit **Admin > Background Tasks** in your CMS
-- Check the cron log for recent executions
-- Look for "Link Checker" entries
+
+-   Visit **Admin > Background Tasks** in your CMS
+-   Check the cron log for recent executions
+-   Look for "Link Checker" entries
 
 ### Email Notifications
 
 Email sent when:
+
 -   Email notifications are enabled
 -   Scan completes
 -   Problems found (if "Only On Problems" enabled)
@@ -279,24 +288,25 @@ Email sent when:
 **Note:** Warnings (redirects) don't count as "problems" for email purposes.
 
 Email includes:
+
 -   Summary statistics
 -   Direct link to dashboard
 -   Date/time of scan
 
 ## HTTP Response Codes
 
-| Code  | Meaning                       | Plugin Action   |
-| ----- | ----------------------------- | --------------- |
-| 200   | OK                            | Success         |
-| 301   | Moved Permanently             | Warning (log)   |
-| 302   | Found (temporary redirect)    | Warning (log)   |
-| 403   | Forbidden                     | Auto-ignore     |
-| 404   | Not Found                     | Broken (log)    |
-| 406   | Not Acceptable                | Auto-ignore     |
-| 429   | Too Many Requests             | Auto-ignore     |
-| 500   | Internal Server Error         | Broken (log)    |
-| 999   | LinkedIn bot block            | Auto-ignore     |
-| 0     | Connection failed/timeout     | Timeout (log)   |
+| Code | Meaning                    | Plugin Action |
+| ---- | -------------------------- | ------------- |
+| 200  | OK                         | Success       |
+| 301  | Moved Permanently          | Warning (log) |
+| 302  | Found (temporary redirect) | Warning (log) |
+| 403  | Forbidden                  | Auto-ignore   |
+| 404  | Not Found                  | Broken (log)  |
+| 406  | Not Acceptable             | Auto-ignore   |
+| 429  | Too Many Requests          | Auto-ignore   |
+| 500  | Internal Server Error      | Broken (log)  |
+| 999  | LinkedIn bot block         | Auto-ignore   |
+| 0    | Connection failed/timeout  | Timeout (log) |
 
 ## Requirements
 
@@ -304,7 +314,7 @@ Email includes:
 -   PHP 8.0 or higher
 -   cURL extension enabled
 -   Write access to plugin directory (for settings storage)
--   **Server cron job** configured to run `/webadmin/cron.php` (required for scheduled scanning)
+-   **Server cron job** configured to run `/cmsb/cron.php` (required for scheduled scanning)
 
 ## Troubleshooting
 
@@ -342,7 +352,7 @@ Email includes:
 
 ### Scheduled Scans Not Running
 
--   Verify server cron job is configured: `* * * * * /usr/local/bin/php /path/to/webadmin/cron.php yourdomain.com`
+-   Verify server cron job is configured: `* * * * * /usr/local/bin/php /path/to/cmsb/cron.php yourdomain.com`
 -   Check **Admin > Background Tasks** to see if cron is running
 -   Look for "Link Checker" entries in cron log
 -   Ensure "Scheduled Scan" is enabled in plugin Settings
@@ -354,6 +364,7 @@ Email includes:
 ### Clear All Results
 
 Via the admin interface (Advanced Actions > Clear All Results):
+
 -   Removes all link check results from the database
 -   Clears complete scan history
 -   Resets last scan status in settings
@@ -366,11 +377,12 @@ Via the admin interface (Advanced Actions > Clear All Results):
 For troubleshooting or testing, you can completely reset the plugin installation:
 
 ```bash
-cd /path/to/webadmin/plugins/linkChecker/
+cd /path/to/cmsb/plugins/linkChecker/
 php reset_installation.php
 ```
 
 This script will:
+
 1. Drop existing `linkchecker_results` and `linkchecker_scans` tables
 2. Backup current settings to `linkChecker_settings_backup_YYYY-MM-DD_HHMMSS.json`
 3. Delete the current settings file
@@ -380,6 +392,7 @@ This script will:
 **Warning:** This deletes ALL scan data and history! Use only for troubleshooting or fresh starts.
 
 **When to use:**
+
 -   Plugin tables become corrupted
 -   Testing fresh installation behavior
 -   Resetting after development/testing phase
@@ -388,6 +401,7 @@ This script will:
 ## Best Practices
 
 **Recommended for Link Checking:**
+
 -   Blog posts and articles
 -   Product pages
 -   Service descriptions
@@ -395,17 +409,20 @@ This script will:
 -   Any content-heavy sections
 
 **Not Recommended:**
+
 -   Upload galleries (unless you want to check captions)
 -   Settings/configuration tables
 -   Menu items (use separate menu checking)
 -   Tables without rich content
 
 **Scan Frequency:**
+
 -   **Daily**: For active blogs or frequently updated content
 -   **Weekly**: For most business websites
 -   **Monthly**: For rarely updated static sites
 
 **Ignore List Usage:**
+
 -   Social media domains (often block bots)
 -   Internal dev/staging URLs
 -   Known redirects you can't fix
@@ -425,13 +442,6 @@ linkChecker/
 ├── README.md                           # This file
 └── REVIEW_SUMMARY.md                   # Code quality review (security/accessibility)
 ```
-
-## Future Enhancements (Phase 2)
-
--   Dashboard integration at sagentic.dev for centralized monitoring
--   Aggregate statistics across all managed sites
--   Prioritization of which sites need attention
--   Trend analysis and reporting
 
 ## Version History
 
