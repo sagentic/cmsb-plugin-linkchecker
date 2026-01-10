@@ -1,5 +1,7 @@
 # Link Checker Plugin for CMS Builder
 
+> **Note:** This plugin only works with CMS Builder, available for download at https://www.interactivetools.com/download/
+
 Automatically scan database content fields for broken links, missing images, and malformed contact links. Helps webmasters identify and fix link issues before they impact SEO or user experience.
 
 ## Features
