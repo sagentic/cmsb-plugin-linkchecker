@@ -1,21 +1,21 @@
 # Link Checker Plugin for CMS Builder
 
-> **Note:** This plugin only works with CMS Builder, available for download at https://www.interactivetools.com/download/
-
 Automatically scan database content fields for broken links, missing images, and malformed contact links. Helps webmasters identify and fix link issues before they impact SEO or user experience.
 
 ## Features
 
 -   **Comprehensive Link Checking**: Scans internal links, external links, images, email addresses (mailto:), and phone numbers (tel:)
 -   **Smart Auto-Ignore**: Automatically ignores domains that block bot requests (403, 999 status codes)
--   **Default Ignore List**: Pre-configured with 9 common domains (LinkedIn, Facebook, Google, etc.)
+-   **Default Ignore List**: Pre-configured with 9 common domains that block automated requests (LinkedIn, Facebook, Google, etc.)
 -   **Scheduled Scanning**: Configurable automatic scans (daily, weekly, monthly)
 -   **Email Notifications**: Get notified when broken links are found
 -   **Detailed Reports**: Track broken links, redirects, invalid formats, and timeouts
+-   **Optional Redirect Reporting**: Choose whether to report 301/302 redirects or treat them as OK
 -   **Direct Edit Links**: Click to edit the record containing broken links (opens in new tab)
 -   **Bulk Actions**: Mark multiple links as fixed, ignored, or recheck them all at once
 -   **Single-Link Actions**: Quick recheck and ignore buttons on individual links
 -   **Smart Recheck**: Automatically detects removed links and marks them as fixed
+-   **Detailed Recheck Feedback**: Shows exactly what happened after rechecking (now working, still broken, or removed)
 -   **Preserved Status**: Ignored links stay ignored during rescans and rechecks
 -   **Advanced Actions Menu**: Quick access to scans and cleanup on all pages
 -   **Clear All Results**: Complete reset feature with confirmation
@@ -25,26 +25,26 @@ Automatically scan database content fields for broken links, missing images, and
 
 ## Installation
 
-1.  Copy the `linkChecker` folder to your plugins directory:
+1. Copy the `linkChecker` folder to your plugins directory:
 
-        - `/cmsb/plugins/linkChecker/` (standard CMSB installation)
+    - `/cmsb/plugins/linkChecker/`
 
-2.  Ensure PHP files have proper permissions (readable by web server):
+2. Ensure PHP files have proper permissions (readable by web server):
 
-        ```bash
-        chmod 644 /path/to/plugins/linkChecker/*.php
-        ```
+    ```bash
+    chmod 644 /path/to/plugins/linkChecker/*.php
+    ```
 
-3.  Log into the CMS admin area
+3. Log into the CMS admin area
 
-4.  The plugin will automatically:
+4. The plugin will automatically:
 
-        - Create the database tables for results and scan history
-        - Initialize default settings
+    - Create the database tables for results and scan history
+    - Initialize default settings
 
-5.  Verify installation by visiting **Plugins > Link Checker > Dashboard**
+5. Verify installation by visiting **Plugins > Link Checker > Dashboard**
 
-6.  Go to **Plugins > Link Checker > Settings** to configure scan options
+6. Go to **Plugins > Link Checker > Settings** to configure scan options
 
 ## Configuration
 
@@ -60,6 +60,7 @@ All settings are configured through the admin interface at **Plugins > Link Chec
 | Check Images           | Scan image src attributes                     | Enabled              |
 | Check Email Links      | Validate mailto: format                       | Enabled              |
 | Check Phone Links      | Validate tel: format                          | Enabled              |
+| Check for Redirects    | Report 301/302 redirects as warnings          | Enabled              |
 | Scheduled Scan         | Enable automatic scanning                     | Enabled              |
 | Scan Frequency         | How often to scan (daily/weekly/monthly)      | Daily                |
 | Email Notifications    | Send email reports                            | Enabled              |
@@ -77,10 +78,12 @@ The plugin reports four types of issues:
 | Status    | Description                             | Action Required |
 | --------- | --------------------------------------- | --------------- |
 | `broken`  | 404, 500, connection failed             | Fix immediately |
-| `warning` | 301/302 redirects                       | Consider update |
+| `warning` | 301/302 redirects (if enabled)          | Consider update |
 | `invalid` | Malformed mailto: or tel: format        | Fix immediately |
 | `timeout` | Request timed out                       | Investigate     |
 | `ok`      | Link is working (not stored in results) | None            |
+
+**Note:** Redirect reporting can be disabled in Settings. When disabled, 301/302 redirects are treated as OK and not logged.
 
 ### Ignore List
 
@@ -106,8 +109,12 @@ These defaults prevent false positives on social media and other bot-blocking si
 
 -   **Auto-Ignore**: Domains returning 403, 406, 429, or 999 are automatically added during scans
 -   **Manual Ignore**: Add specific URLs via Settings page or by marking individual links as ignored
--   **Pattern Types**: - `domain` - Match entire domain (e.g., "facebook.com") - `path` - Match URL path (e.g., "/old-page/")
--   **Dual Format Support**: - Array format (with metadata): `{"pattern": "linkedin.com", "type": "domain", "reason": "...", "addedBy": "auto"}` - String format (manual URLs): Simple URL strings for manually ignored links
+-   **Pattern Types**:
+    -   `domain` - Match entire domain (e.g., "facebook.com")
+    -   `path` - Match URL path (e.g., "/old-page/")
+-   **Dual Format Support**:
+    -   Array format (with metadata): `{"pattern": "linkedin.com", "type": "domain", "reason": "...", "addedBy": "auto"}`
+    -   String format (manual URLs): Simple URL strings for manually ignored links
 
 #### Example ignore list structure:
 
@@ -162,7 +169,10 @@ View and manage all detected issues:
 
 -   Filter by: status, link type, table, date range
 -   Sort by any column
--   **Bulk Actions**: Select multiple links and apply actions: - Mark as Fixed - Mark as Ignored - Recheck Selected
+-   **Bulk Actions**: Select multiple links and apply actions:
+    -   Mark as Fixed
+    -   Mark as Ignored
+    -   Recheck Selected
 -   **Individual Actions**: Each link has Edit, Recheck, and Ignore buttons
 -   Direct "Edit Record" links open in new tabs
 -   Export to CSV (planned)
@@ -181,7 +191,7 @@ Available on all pages (Dashboard, Results, Settings, Run Scan, Scan History, Ig
 
 Configure all plugin options including:
 
--   What to check (internal/external/images/emails/phones)
+-   What to check (internal/external/images/emails/phones/redirects)
 -   When to check (schedule and frequency)
 -   Who to notify (email settings)
 -   What to ignore (ignore list management)
@@ -259,13 +269,15 @@ It extracts:
 
 The plugin registers two cron jobs with CMSB's cron system:
 
-1.  **Link Checker - Scheduled Scan** (runs daily at midnight)
+1. **Link Checker - Scheduled Scan** (runs daily at midnight)
 
-        - Checks if a scan is due based on your frequency setting (daily/weekly/monthly)
-        - Only scans if enough time has passed since last scan
-        - Sends email notification after completion
+    - Checks if a scan is due based on your frequency setting (daily/weekly/monthly)
+    - Only scans if enough time has passed since last scan
+    - Sends email notification after completion
 
-2.  **Link Checker - Cleanup Old Results** (runs daily at 1 AM) - Removes old scan results based on retention setting - Keeps database clean and performant
+2. **Link Checker - Cleanup Old Results** (runs daily at 1 AM)
+    - Removes old scan results based on retention setting
+    - Keeps database clean and performant
 
 **Important:** CMSB's cron system requires a server cron job to be set up:
 

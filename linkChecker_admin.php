@@ -8,6 +8,37 @@
 
 
 /**
+ * Set a flash notice that persists across redirects
+ */
+function linkChecker_setFlashNotice(string $message): void
+{
+	$_SESSION['_linkchecker_flash_notice'] = $message;
+}
+
+/**
+ * Set a flash alert that persists across redirects
+ */
+function linkChecker_setFlashAlert(string $message): void
+{
+	$_SESSION['_linkchecker_flash_alert'] = $message;
+}
+
+/**
+ * Display any flash messages and clear them
+ */
+function linkChecker_displayFlashMessages(): void
+{
+	if (!empty($_SESSION['_linkchecker_flash_notice'])) {
+		\notice($_SESSION['_linkchecker_flash_notice']);
+		unset($_SESSION['_linkchecker_flash_notice']);
+	}
+	if (!empty($_SESSION['_linkchecker_flash_alert'])) {
+		\alert($_SESSION['_linkchecker_flash_alert']);
+		unset($_SESSION['_linkchecker_flash_alert']);
+	}
+}
+
+/**
  * Generate plugin navigation bar
  *
  * @param string $currentPage Current page identifier
@@ -63,20 +94,49 @@ function linkChecker_adminDashboard(): void
 	// security_dieOnInvalidCsrfToken() only works with POST requests
 	if (($_REQUEST['_action'] ?? '') === 'quickScan') {
 		linkChecker_runLinkCheck();
-		\alert(t('Quick scan completed'));
+		linkChecker_setFlashNotice(t('Quick scan completed'));
 		\redirectBrowserToURL('?_pluginAction=' . __FUNCTION__);
 	}
 
 	if (($_REQUEST['_action'] ?? '') === 'clearOldScans') {
 		linkChecker_cleanupOldScans();
-		\alert(t('Old scan history cleared'));
+		linkChecker_setFlashNotice(t('Old scan history cleared'));
+		\redirectBrowserToURL('?_pluginAction=' . __FUNCTION__);
+	}
+
+	// Handle single link actions (recheck/ignore from dashboard)
+	if (($_REQUEST['_singleAction'] ?? '') && ($_REQUEST['_linkId'] ?? '')) {
+		\security_dieOnInvalidCsrfToken();
+
+		$action = $_REQUEST['_singleAction'];
+		$linkId = intval($_REQUEST['_linkId']);
+
+		if ($action === 'recheck') {
+			$recheckResults = linkChecker_recheckLinks([$linkId]);
+			$messages = [];
+			if ($recheckResults['nowWorking'] > 0) {
+				$messages[] = t('now working');
+			}
+			if ($recheckResults['stillBroken'] > 0) {
+				$messages[] = t('still broken');
+			}
+			if ($recheckResults['removed'] > 0) {
+				$messages[] = t('removed from content');
+			}
+			$message = t('Link rechecked: ') . implode(', ', $messages);
+			linkChecker_setFlashNotice($message);
+		} elseif ($action === 'markIgnored') {
+			linkChecker_markLinksAsIgnored([$linkId]);
+			linkChecker_setFlashNotice(t('Link marked as ignored'));
+		}
+
 		\redirectBrowserToURL('?_pluginAction=' . __FUNCTION__);
 	}
 
 	if (($_REQUEST['_action'] ?? '') === 'clearResults') {
 		if (($_REQUEST['_confirm'] ?? '') === 'yes') {
 			$count = linkChecker_clearAllResults();
-			\alert(t('Cleared %d link check results', $count));
+			linkChecker_setFlashNotice(sprintf(t('Cleared %d link check results'), $count));
 			\redirectBrowserToURL('?_pluginAction=' . __FUNCTION__);
 		} else{
 			// Show confirmation page
@@ -127,6 +187,9 @@ function linkChecker_adminDashboard(): void
 
 	// Plugin navigation
 	$content .= linkChecker_getPluginNav('dashboard');
+
+	// Display any flash messages from redirects
+	linkChecker_displayFlashMessages();
 
 	// Load settings
 	$pluginSettings = linkChecker_loadPluginSettings();
@@ -282,6 +345,48 @@ function linkChecker_adminDashboard(): void
 		$content .= '</tbody></table></div>';
 
 		$content .= '<p style="margin-top:10px"><a href="?_pluginAction=linkChecker_adminResults&filterStatus=broken">' . t('View all broken links') . ' &raquo;</a></p>';
+
+		// Add JavaScript for recheck/ignore buttons
+		$csrfToken = $_SESSION['_csrf'] ?? '';
+		$content .= '<script>
+var csrfToken = ' . json_encode($csrfToken) . ';
+
+function recheckSingle(linkId) {
+	if (confirm("' . t('Recheck this link now?') . '")) {
+		submitSingleAction("recheck", linkId);
+	}
+}
+
+function ignoreSingle(linkId) {
+	if (confirm("' . t('Mark this link as ignored?') . '")) {
+		submitSingleAction("markIgnored", linkId);
+	}
+}
+
+function submitSingleAction(action, linkId) {
+	var form = document.createElement("form");
+	form.method = "POST";
+	form.action = "?_pluginAction=linkChecker_adminDashboard";
+
+	var inputs = [
+		{name: "_pluginAction", value: "linkChecker_adminDashboard"},
+		{name: "_singleAction", value: action},
+		{name: "_linkId", value: linkId},
+		{name: "_csrf", value: csrfToken}
+	];
+
+	inputs.forEach(function(input) {
+		var hiddenField = document.createElement("input");
+		hiddenField.type = "hidden";
+		hiddenField.name = input.name;
+		hiddenField.value = input.value;
+		form.appendChild(hiddenField);
+	});
+
+	document.body.appendChild(form);
+	form.submit();
+}
+</script>';
 	}
 
 	$adminUI['CONTENT'] = $content;
@@ -309,13 +414,27 @@ function linkChecker_adminResults(): void
 
 		if ($action === 'markFixed') {
 			linkChecker_markLinksAsFixed($selectedIds);
-			\alert(sprintf(t('%d links marked as fixed'), count($selectedIds)));
+			linkChecker_setFlashNotice(sprintf(t('%d links marked as fixed'), count($selectedIds)));
 		} elseif ($action === 'markIgnored') {
 			linkChecker_markLinksAsIgnored($selectedIds);
-			\alert(sprintf(t('%d links marked as ignored'), count($selectedIds)));
+			linkChecker_setFlashNotice(sprintf(t('%d links marked as ignored'), count($selectedIds)));
 		} elseif ($action === 'recheck') {
-			linkChecker_recheckLinks($selectedIds);
-			\alert(sprintf(t('%d links rechecked'), count($selectedIds)));
+			$recheckResults = linkChecker_recheckLinks($selectedIds);
+			$messages = [];
+			if ($recheckResults['nowWorking'] > 0) {
+				$messages[] = sprintf(t('%d now working'), $recheckResults['nowWorking']);
+			}
+			if ($recheckResults['stillBroken'] > 0) {
+				$messages[] = sprintf(t('%d still broken'), $recheckResults['stillBroken']);
+			}
+			if ($recheckResults['removed'] > 0) {
+				$messages[] = sprintf(t('%d removed from content'), $recheckResults['removed']);
+			}
+			if ($recheckResults['skipped'] > 0) {
+				$messages[] = sprintf(t('%d skipped (ignored)'), $recheckResults['skipped']);
+			}
+			$message = sprintf(t('Rechecked %d links: %s'), $recheckResults['total'], implode(', ', $messages));
+			linkChecker_setFlashNotice($message);
 		}
 
 		\redirectBrowserToURL('?_pluginAction=linkChecker_adminResults');
@@ -386,6 +505,9 @@ function linkChecker_adminResults(): void
 
 	// Plugin navigation
 	$content .= linkChecker_getPluginNav('results');
+
+	// Display any flash messages from redirects
+	linkChecker_displayFlashMessages();
 
 	// Filters Section
 	$content .= '<div class="separator"><div>' . t('Filter Results') . '</div></div>';
@@ -621,7 +743,7 @@ function linkChecker_adminResults(): void
 	}
 
 	// JavaScript for bulk actions and select all
-	$csrfToken = $_SESSION['_CSRFToken'] ?? '';
+	$csrfToken = $_SESSION['_csrf'] ?? '';
 	$content .= '<script>
 var csrfToken = ' . json_encode($csrfToken) . ';
 
@@ -667,7 +789,7 @@ function submitSingleAction(action, linkId) {
 		{name: "_pluginAction", value: "linkChecker_adminResults"},
 		{name: "bulkAction", value: action},
 		{name: "selectedLinks[]", value: linkId},
-		{name: "_CSRFToken", value: csrfToken}
+		{name: "_csrf", value: csrfToken}
 	];
 
 	inputs.forEach(function(input) {
@@ -937,6 +1059,7 @@ function linkChecker_adminSettings(): void
 		$settings['checkImages'] = !empty($_REQUEST['checkImages']);
 		$settings['checkEmailLinks'] = !empty($_REQUEST['checkEmailLinks']);
 		$settings['checkPhoneLinks'] = !empty($_REQUEST['checkPhoneLinks']);
+		$settings['reportRedirects'] = !empty($_REQUEST['reportRedirects']);
 		$settings['scheduledScan'] = !empty($_REQUEST['scheduledScan']);
 		$settings['scanFrequency'] = $_REQUEST['scanFrequency'] ?? 'daily';
 		$settings['emailNotifications'] = !empty($_REQUEST['emailNotifications']);
@@ -1047,6 +1170,17 @@ function linkChecker_adminSettings(): void
 	$content .= '<input type="hidden" name="checkPhoneLinks" value="0">';
 	$content .= '<input type="checkbox" name="checkPhoneLinks" id="checkPhoneLinks" value="1"' . (($settings['checkPhoneLinks'] ?? true) ? ' checked' : '') . '> ';
 	$content .= t('Check phone links (tel: format validation)');
+	$content .= '</label></div>';
+	$content .= '</div></div>';
+
+	// Report Redirects (301/302)
+	$content .= '<div class="form-group">';
+	$content .= '<div class="col-sm-2 control-label">' . t('Redirects') . '</div>';
+	$content .= '<div class="col-sm-10">';
+	$content .= '<div class="checkbox"><label>';
+	$content .= '<input type="hidden" name="reportRedirects" value="0">';
+	$content .= '<input type="checkbox" name="reportRedirects" id="reportRedirects" value="1"' . (($settings['reportRedirects'] ?? true) ? ' checked' : '') . '> ';
+	$content .= t('Check for 301/302 redirects');
 	$content .= '</label></div>';
 	$content .= '</div></div>';
 
@@ -1388,7 +1522,7 @@ function linkChecker_adminHistory(): void
 	$content .= '<div style="margin-top:20px">';
 	$content .= '<form method="get" style="display:inline-block">';
 	$content .= '<input type="hidden" name="_pluginAction" value="linkChecker_adminHistory">';
-	$content .= '<label for="perPage">' . t('Per Page:') . ' </label>';
+	$content .= '<label for="perPage" style="margin-right:10px">' . t('Per Page:') . '</label>';
 	$content .= '<select name="perPage" id="perPage" class="form-control" style="width:100px;display:inline-block" onchange="this.form.submit()">';
 	foreach ([10, 25, 50, 100] as $pp) {
 		$content .= '<option value="' . $pp . '"' . ($perPage === $pp ? ' selected' : '') . '>' . $pp . '</option>';

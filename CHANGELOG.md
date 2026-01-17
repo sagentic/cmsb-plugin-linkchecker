@@ -1,5 +1,24 @@
 # Link Checker Plugin - Changelog
 
+\*\*\* January 16, 2026 - Version 1.01
+
+NEW FEATURES
+
+-   Added "Check for 301/302 redirects" setting - optionally disable redirect reporting when not needed
+-   Detailed recheck feedback - shows exactly what happened (now working, still broken, or removed from content)
+
+BUG FIXES
+
+-   Fixed CSRF token issue preventing recheck/ignore buttons from working
+-   Fixed missing feedback messages after recheck and bulk actions
+-   Fixed recheck/ignore buttons on Dashboard not functioning
+
+UI IMPROVEMENTS
+
+-   Added spacing between "Per Page" label and dropdown on History page
+
+---
+
 \*\*\* January 8, 2026 - Version 1.00 (Initial Release)
 
 REQUIREMENTS: PHP 8.0+ and CMS Builder 3.78+

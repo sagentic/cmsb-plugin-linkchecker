@@ -32,6 +32,7 @@ function linkChecker_loadPluginSettings(): array
 		'checkImages' => true,
 		'checkEmailLinks' => true,
 		'checkPhoneLinks' => true,
+		'reportRedirects' => true,
 		'scheduledScan' => true,
 		'scanFrequency' => 'daily',
 		'emailNotifications' => true,
@@ -836,6 +837,11 @@ function linkChecker_performScan(array $tables, int $scanId): array
 					$checkResult = linkChecker_checkLink($link['url'], $link['type']);
 					$results['linksChecked']++;
 
+					// If reportRedirects is disabled, treat redirects (warnings) as OK
+					if ($checkResult['status'] === 'warning' && empty($settings['reportRedirects'])) {
+						$checkResult['status'] = 'ok';
+					}
+
 					// Only log problems (broken, warnings, invalid, timeout)
 					if ($checkResult['status'] !== 'ok') {
 						linkChecker_logLinkResult($scanId, $tableName, $record['num'], $fieldName, $link, $checkResult);
@@ -1215,19 +1221,29 @@ function linkChecker_markLinksAsIgnored(array $linkIds): int
  * Recheck links
  *
  * @param array $linkIds Array of link result IDs
- * @return int Number of links rechecked
+ * @return array Results with counts: ['total' => int, 'nowWorking' => int, 'stillBroken' => int, 'removed' => int, 'skipped' => int]
  */
-function linkChecker_recheckLinks(array $linkIds): int
+function linkChecker_recheckLinks(array $linkIds): array
 {
-	$count = 0;
+	$results = [
+		'total' => 0,
+		'nowWorking' => 0,
+		'stillBroken' => 0,
+		'removed' => 0,
+		'skipped' => 0,
+	];
+
 	foreach ($linkIds as $linkId) {
 		$result = \mysql_get('_linkchecker_results', intval($linkId));
 		if (!$result) continue;
 
 		// Skip if already marked as ignored - don't recheck ignored links
 		if ($result['ignored'] == 1 || $result['status'] === 'ignored') {
+			$results['skipped']++;
 			continue;
 		}
+
+		$results['total']++;
 
 		// Check if the link still exists in the source record
 		$linkStillExists = false;
@@ -1250,7 +1266,7 @@ function linkChecker_recheckLinks(array $linkIds): int
 				'errorMessage' => 'Link removed or replaced in content',
 			];
 			\mysql_update('_linkchecker_results', intval($linkId), null, $data);
-			$count++;
+			$results['removed']++;
 			continue;
 		}
 
@@ -1272,12 +1288,14 @@ function linkChecker_recheckLinks(array $linkIds): int
 			$data['fixedDate='] = 'NOW()';
 			// Clear ignored flag if it was previously ignored but now works
 			$data['ignored'] = 0;
+			$results['nowWorking']++;
+		} else {
+			$results['stillBroken']++;
 		}
 
 		\mysql_update('_linkchecker_results', intval($linkId), null, $data);
-		$count++;
 	}
-	return $count;
+	return $results;
 }
 
 /**
